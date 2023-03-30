@@ -1,0 +1,374 @@
+﻿@page "/fetchdata"
+@using ofis.Data
+@using System
+
+@inject WeatherForecastService ForecastService
+
+<h1>Mükellefler</h1>
+<p style="color:red">@Error</p>
+@if (forecasts == null)
+{
+    
+    <p><em>Yükleniyor...</em></p>
+}
+else
+{
+    <!-- Show the forecasts for the current user -->
+    <table class="table" > 
+        <thead>
+            <tr>
+                <th class="sutun-sabit"></th>
+                <th class="sutun-sabit">Ünvan</th>
+                <th>Not</th>
+                <th>Bordro</th>
+                <th>Muhtasar</th>
+                <th>Fatura</th>
+                <th>KDV</th>
+                <th>Ödemeler</th>
+                <th>Geçici</th>
+                <th>Yıllık V.</th>
+               
+            </tr>
+        </thead>
+        <tbody>
+            @{
+            int y = 0;
+            
+                
+            }
+            @foreach (var forecast in forecasts)
+            {
+               
+                y =  y + 1;
+                <tr>
+                    <td><span style="font-size:x-small; font-style:italic">@y.ToString()</span></td>
+                    @*IsVisible="@forecast.BordroOlacakmi == true"*@
+                    <td><button class="btn btn-primary" @onclick="(() => Duzenle(forecast))">@forecast.Unvan</button> </td>
+                     <td align="center">
+                        @if (@forecast.HatirlatmaOlacakmi == true)
+                        {
+                            <span style="font-size:xx-small; font-style:italic">@forecast.Hatirlatma</span>
+                        }</td>
+                    <td align="center">@if (@forecast.BordroOlacakmi==true)
+                        {
+                            <input  type="checkbox" name="bordro" checked="@forecast.Bordro" @onclick="(()=>UppoBordro(forecast))" />
+                        }</td>
+                   
+                    <td align="center">
+                        @if (@forecast.MuhtasarOlacakmi == true)
+                        {
+                            <input type="checkbox" name="muhtasar" checked="@forecast.Muhtasar" @onclick="(()=>UppoMuhtasar(forecast))"  />
+                        }</td>
+                    <td align="center">
+                        @if (@forecast.FaturalarOlacakmi == true)
+                        {
+                            <input type="checkbox" name="faturalar" checked="@forecast.Faturalar" @onclick="(()=>UppoFaturalar(forecast))" />
+                        }</td>
+                    <td align="center">@if (@forecast.KdvOlacakmi==true)
+                        {
+                            <input type="checkbox" name="kdv" checked="@forecast.Kdv" @onclick="(()=>UppoKdv(forecast))" />
+                        }</td>
+                    <td align="center">
+                        @if (@forecast.OdemelerOlacakmi == true)
+                        {
+                            <input type="checkbox" name="odemeler" checked="@forecast.Odemeler" @onclick="(()=>UppoOdemeler(forecast))" />
+                        }</td>
+                    <td align="center">
+                        @if (@forecast.GeciciOlacakmi == true)
+                        {
+                            <input type="checkbox" name="gecici" checked="@forecast.Gecici" @onclick="(()=>UppoGecici(forecast))" />
+                        }</td>
+                    <td align="center">
+                        @if (@forecast.YillikOlacakmi == true)
+                        {
+                          <input type="checkbox" name="yillik" checked="@forecast.Yillik" @onclick="(()=>UppoYillik(forecast))" />  
+                        }</td>
+                @*    <td>
+
+                        <!-- Edit the current forecast -->
+                        <!-- Edit the current forecast -->
+                       
+                            
+                            <button class="btn btn-primary"
+                        @onclick="(() => EditForecast(forecast))">
+                                Güncelle
+                            </button>
+                   
+                       
+                  
+                    </td>*@
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p>
+        <!-- Add a new forecast -->
+        <button class="btn btn-success"
+            @onclick="AddNewForecast">
+            Yeni Mükellef Ekle
+        </button>
+    </p>
+
+    @if (ShowPopup)
+    {
+        <!-- This is the popup to create or edit a forecast -->
+        <div class="modal" tabindex="-1" style="display:block" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Mükellef</h3>
+                        <!-- Button to close the popup -->
+                        <button type="button" class="close"
+                        @onclick="ClosePopup">
+                            <span aria-hidden="true">X</span>
+                        </button>
+                    </div>
+                    <!-- Edit form for the current forecast -->
+                    <div class="modal-body">
+                       <input class="form-control" type="text"
+                       placeholder="Mükellef Ünvanı Giriniz"
+                       @bind="objWeatherForecast.Unvan"/>
+                        <br />
+                        <input class="form-control" type="text"
+                       placeholder="Hatırlatıcı Giriniz"
+                       @bind="objWeatherForecast.Hatirlatma" />
+                        <br />
+                        <table class="table">
+                            <tr>
+                            İş Takip Çizelgesinde Göster/Gizle
+                                    </tr>
+                            <tr>
+                                <td>Hatırlatıcı</td>
+                                <td><input type="checkbox" name="bordroOlacakmi" @bind="objWeatherForecast.HatirlatmaOlacakmi" /></td>
+                            </tr>
+                            <tr>
+                                <td>Bordro:</td>
+                                <td><input type="checkbox" name="bordroOlacakmi" @bind="objWeatherForecast.BordroOlacakmi" /></td>
+                            </tr>
+                            <tr>
+                                <td>Fatura:</td>
+                                <td><input type="checkbox" name="FaturalarOlacakmi" @bind="objWeatherForecast.FaturalarOlacakmi" /></td>
+                            </tr>
+                            <tr>
+                                <td>Kdv:</td>
+                                <td><input type="checkbox" name="KdvOlacakmi" @bind="objWeatherForecast.KdvOlacakmi" /></td>
+                            </tr>
+                            <tr>
+                                <td>Muhtasar:</td>
+                                <td><input type="checkbox" name="MuhtasarOlacakmi" @bind="objWeatherForecast.MuhtasarOlacakmi" /></td>
+                            </tr>
+                            <tr>
+                                <td>Ödemeler:</td>
+                                <td><input type="checkbox" name="OdemelerOlacakmi" @bind="objWeatherForecast.OdemelerOlacakmi" /></td>
+                            </tr>
+                            <tr>
+                                <td>Geçici:</td>
+                                <td><input type="checkbox" name="GeciciOlacakmi" @bind="objWeatherForecast.GeciciOlacakmi" /></td>
+                            </tr>
+                            <tr>
+                                <td>Yıllık:</td>
+                                <td><input type="checkbox" name="YillikOlacakmi" @bind="objWeatherForecast.YillikOlacakmi"/></td>
+                            </tr>
+                        </table>
+                        <br />
+                        <button class="btn btn-success" @onclick="SaveForecast">  Kaydet </button>
+                        <!-- Only show delete button if not a new record -->
+                        @if (objWeatherForecast.Id > 0)
+                        {
+                            <!-- Button to delete the forecast -->
+                            <button class="btn btn-danger"
+                        @onclick="DeleteForecast">
+                                Sil
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+@code
+{
+
+    string Error = "";
+    List<WeatherForecast> forecasts = new List<WeatherForecast>();
+    WeatherForecast objWeatherForecast = new WeatherForecast();
+    bool ShowPopup = false;
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the forecasts
+        forecasts = await ForecastService.GetForecastAsync();
+      
+  
+    }
+
+    void AddNewForecast()
+    {
+        // Make new forecast
+        objWeatherForecast = new WeatherForecast();
+        // Set Id to 0 so we know it is a new record
+        objWeatherForecast.Id = 0;
+        // Open the Popup
+        ShowPopup = true;
+    }
+    void EditForecast(WeatherForecast weatherForecast)
+    {
+        // Set the selected forecast
+        // as the current forecast
+        objWeatherForecast = weatherForecast;
+        // Open the Popup
+        //ShowPopup = false;
+        Task.Run(Guncelle);
+        //ShowPopup = true;
+    }
+    void Duzenle(WeatherForecast weatherForecast)
+    {
+        // Set the selected forecast
+        // as the current forecast
+        objWeatherForecast = weatherForecast;
+        // Open the Popup
+        ShowPopup = true;
+        //ShowPopup = false;
+        // Guncelle();
+
+    }
+    void UppoBordro(WeatherForecast fcast)
+    {
+        fcast.Bordro = !fcast.Bordro;
+        objWeatherForecast = fcast;
+        Guncelle();
+
+    }
+    void UppoMuhtasar(WeatherForecast fcast)
+    {
+        fcast.Muhtasar = !fcast.Muhtasar;
+        objWeatherForecast = fcast;
+        Guncelle();
+
+    }
+    void UppoFaturalar(WeatherForecast fcast)
+    {
+        fcast.Faturalar = !fcast.Faturalar;
+        objWeatherForecast = fcast;
+        Guncelle();
+
+    }
+    void UppoKdv(WeatherForecast fcast)
+    {
+        fcast.Kdv = !fcast.Kdv;
+        objWeatherForecast = fcast;
+        Guncelle();
+
+    }
+    void UppoOdemeler(WeatherForecast fcast)
+    {
+        fcast.Odemeler = !fcast.Odemeler;
+        objWeatherForecast = fcast;
+        Guncelle();
+
+    }
+    void UppoGecici(WeatherForecast fcast)
+    {
+        fcast.Gecici = !fcast.Gecici;
+        objWeatherForecast = fcast;
+        Guncelle();
+
+    }
+    void UppoYillik(WeatherForecast fcast)
+    {
+        fcast.Yillik = !fcast.Yillik;
+        objWeatherForecast = fcast;
+        Guncelle();
+
+    }
+    void ClosePopup()
+    {
+        // Close the Popup
+        ShowPopup = false;
+    }
+
+    async Task SaveForecast()
+    {
+        // Close the Popup
+        ShowPopup = false;
+        Error = "";
+        try
+        {
+            // A new forecast will have the Id set to 0
+            if (objWeatherForecast.Id == 0)
+            {
+                // Create new forecast
+                WeatherForecast objNewWeatherForecast = new WeatherForecast();
+                objNewWeatherForecast.Unvan = objWeatherForecast.Unvan;
+                objNewWeatherForecast.Hatirlatma = objWeatherForecast.Hatirlatma;
+                objNewWeatherForecast.Bordro = false;
+                objNewWeatherForecast.Faturalar = false;
+                objNewWeatherForecast.Kdv = false;
+                objNewWeatherForecast.Muhtasar = false;
+                objNewWeatherForecast.Odemeler = false;
+                objNewWeatherForecast.Gecici = false;
+                objNewWeatherForecast.Yillik = false;
+
+                objNewWeatherForecast.HatirlatmaOlacakmi = objWeatherForecast.HatirlatmaOlacakmi;
+                objNewWeatherForecast.BordroOlacakmi = objWeatherForecast.BordroOlacakmi;
+                objNewWeatherForecast.FaturalarOlacakmi = objWeatherForecast.FaturalarOlacakmi;
+                objNewWeatherForecast.KdvOlacakmi = objWeatherForecast.KdvOlacakmi;
+                objNewWeatherForecast.MuhtasarOlacakmi = objWeatherForecast.MuhtasarOlacakmi;
+                objNewWeatherForecast.OdemelerOlacakmi = objWeatherForecast.OdemelerOlacakmi;
+                objNewWeatherForecast.GeciciOlacakmi = objWeatherForecast.GeciciOlacakmi;
+                objNewWeatherForecast.YillikOlacakmi = objWeatherForecast.YillikOlacakmi;
+
+                // Save the result
+                var NewWeatherForecast =
+                await ForecastService.CreateForecastAsync(objNewWeatherForecast);
+                // Add the Forcast
+                forecasts.Add(NewWeatherForecast);
+            }
+            else
+            {
+                // This is an update
+                await ForecastService.UpdateForecastAsync(objWeatherForecast);
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+    async Task DeleteForecast()
+    {
+        // Close the Popup
+        ShowPopup = false;
+        try
+        {
+            Error = "";
+            // Delete the forecast
+            await ForecastService.DeleteForecastAsync(objWeatherForecast);
+            // Remove the Forcast
+            forecasts.Remove(objWeatherForecast);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+    async Task Guncelle()
+    {
+
+        try
+        {
+          
+                // This is an update
+                await ForecastService.UpdateForecastAsync(objWeatherForecast);
+           
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+       
+
+    }
+
+}

@@ -1,0 +1,274 @@
+﻿@page "/counter"
+@using ofis.Data
+@using System
+
+
+
+@inject WeatherForecastService ForecastService
+@*@inject TahsilatlarService TahsilatlarSecService*@
+
+<h1>Tahsilat</h1>
+<p style="color:red">@Error</p>
+@if (forecasts == null)
+{
+    
+    <p><em>Yükleniyor...</em></p>
+}
+else
+{
+
+
+    <select style="display:block;width:100%;padding:.375rem .75rem;font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;background-clip:padding-box;border:1px solid #ced4da;border-radius:.25rem;transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out" name="unvanlarBox">
+        @foreach (var forecast in forecasts)
+        {
+            <option @onchange="(() => TahsilatGetir(forecast.Unvan.ToString()))" value="@forecast.Unvan">@forecast.Unvan</option>
+            //@onclick="(() => Duzenle(forecast))"
+        }
+    </select>
+}
+<br />
+@if (tahsilatislemi == null)
+{
+
+    <p><em>Yükleniyor...</em></p>
+}
+else
+{
+
+
+<div class="top-row ps-3 navbar navbar-light">
+        <a class="navbar-brand" href=""><h3>İşlem Yap</h3></a>
+  <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu" >
+    <span class="oi oi-plus"></span>
+  </button>
+</div>
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            @*<label>@selectedUnvan.ToString()</label>*@
+                
+               @* @objTahsilat.Unvan= @selectedUnvan.ToString()*@
+               @*@objTahsilat.Unvan*@
+            <input class="form-control" type="datetime-local"
+                   @bind="objTahsilat.Tarih" />
+
+            <br />
+            Tahsilat : <input type="radio" onselect="@objTahsilat.Tur" /> | Tahakkuk : <input type="radio" onselect="@objTahsilat.Tur" />
+            <br />
+            <input class="form-control" type="text"
+                   placeholder="0,00"
+                   @bind="objTahsilat.Tutar" />
+            <br />
+            <button class="btn btn-success" @onclick="YeniTahsilat"> Kaydet </button>
+            <!-- Only show delete button if not a new record -->
+            @if (objTahsilat.Id > 0)
+            {
+                <!-- Button to delete the forecast -->
+                <button class="btn btn-danger"
+                    @onclick="DeleteTahsilat">
+                    Sil
+                </button>
+            }
+        </div>
+    </nav>
+</div>
+
+
+    <br />
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tarih</th>
+                <th>Tutar</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var tahsilatislemi in tahsilatislemi)
+            {
+                <tr>
+                    <td>@tahsilatislemi.Unvan - @tahsilatislemi.Tarih</td>
+                    @if (@tahsilatislemi.Tur == true)
+                    {
+                        <td>@tahsilatislemi.Tur - @tahsilatislemi.Tutar</td>
+                    }
+                    else
+                    {
+                        <td>@tahsilatislemi.Tur - (-) @tahsilatislemi.Tutar</td>
+                    }
+
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    
+}
+
+
+
+@*@if (ShowPopup)
+{
+    <!-- This is the popup to create or edit a forecast -->
+    <div class="modal" tabindex="-1" style="display:block" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">@selectedUnvan Tahsilat İşlemi</h3>
+                    <!-- Button to close the popup -->
+                    <button type="button" class="close"
+                        @onclick="ClosePopup">
+                        <span aria-hidden="true">X</span>
+                    </button>
+                </div>
+                <!-- Edit form for the current forecast -->
+                <div class="modal-body">
+                    <label>@objTahsilat.Unvan</label>
+                    <br />
+                    <input class="form-control" type="datetime"
+                       @bind="objTahsilat.Tarih" />
+                    <br />
+                    Tahsilat : <input name="tahsilat" type="radio" onselect="@objTahsilat.Tur" /> | Tahakkuk : <input name="tahakkuk" type="radio" onselect="@objTahsilat.Tur" />
+                    <br />
+                    <input class="form-control" type="text"
+                       placeholder="0,00"
+                       @bind="objTahsilat.Tutar" />
+                    <br />
+                    <button class="btn btn-success" @onclick=""> Kaydet </button>
+                    <!-- Only show delete button if not a new record -->
+                    @if (objTahsilat.Id > 0)
+                    {
+                        <!-- Button to delete the forecast -->
+                        <button class="btn btn-danger"
+                        @onclick="DeleteTahsilat">
+                            Sil
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}*@
+
+@code
+{
+    private string selectedUnvan;
+    string Error = "";
+    List<WeatherForecast> forecasts = new List<WeatherForecast>();
+    WeatherForecast objWeatherForecast = new WeatherForecast();
+    bool ShowPopup = false;
+    List<Tahsilatlar> tahsilatislemi = new List<Tahsilatlar>();
+    Tahsilatlar objTahsilat = new Tahsilatlar();
+
+    private bool collapseNavMenu = true;
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    //async void TahsilatSec(Tahsilatlar tahsilat)
+    //{
+
+    //    objTahsilat.Unvan = selectedUnvan;
+    //    tahsilatislemi = await ForecastService.GetTahsilatAsync(objTahsilat.Unvan);
+
+    //}
+    async void TahsilatGetir(ChangeEventArgs e)
+    {
+
+        objTahsilat.Unvan = e.Value.ToString();
+
+        tahsilatislemi = await ForecastService.GetTahsilatAsync(objTahsilat.Unvan);
+        selectedUnvan = objTahsilat.Unvan;
+
+    }
+  
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the forecasts
+        forecasts = await ForecastService.GetForecastAsync();
+       // tahsilatislemi = await ForecastService.GetTahsilatTUMAsync();
+
+    }
+    void ClosePopup()
+    {
+
+        ShowPopup = false;
+    }
+    void AddNewTahsilat()
+    {
+        //ShowPopup = true;
+        objTahsilat = new Tahsilatlar();
+     
+        objTahsilat.Id = 0;
+   
+        
+    }
+    void AddNewForecast()
+    {
+        // Make new forecast
+        objWeatherForecast = new WeatherForecast();
+        // Set Id to 0 so we know it is a new record
+        objWeatherForecast.Id = 0;
+        // Open the Popup
+        ShowPopup = true;
+    }
+    async Task YeniTahsilat()
+    {
+        // Close the Popup
+        ShowPopup = false;
+        Error = "";
+        try
+        {
+        
+            // A new forecast will have the Id set to 0
+            if (objTahsilat.Id == 0)
+            {
+                // Create new forecast
+                Tahsilatlar objYeniTahsilat = new Tahsilatlar();
+                objYeniTahsilat.Unvan = objTahsilat.Unvan;
+                objYeniTahsilat.Tarih = objTahsilat.Tarih;
+                objYeniTahsilat.Tur = objTahsilat.Tur;
+                objYeniTahsilat.Tutar = objTahsilat.Tutar;
+                // Save the result
+                var Tahsilatlar =
+                await ForecastService.CreateTahsilatAsync(objYeniTahsilat);
+                // Add the Forcast
+                tahsilatislemi.Add(objYeniTahsilat);
+            }
+            else
+            {
+                // This is an update
+                await ForecastService.UpdateTahsilatAsync(objTahsilat);
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+    async Task DeleteTahsilat()
+    {
+        // Close the Popup
+        ShowPopup = false;
+        try
+        {
+            Error = "";
+            // Delete the forecast
+            await ForecastService.DeleteTahsilatAsync(objTahsilat);
+            // Remove the Forcast
+            tahsilatislemi.Remove(objTahsilat);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+
+
+}
+
+
